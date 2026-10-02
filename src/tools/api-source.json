@@ -1,0 +1,20 @@
+{
+  "source": "https://api-headless.circle.so/api/admin/v2/swagger.yaml",
+  "checked": "2026-10-02",
+  "apiVersion": "Admin v2",
+  "documentVersion": "v1",
+  "sha256": "3e6478f0ac859789a70b8356ac0c91901de99134f637832809497d555e897241",
+  "upstreamSha256": "9bdd6e72611fe2af43e308ffadb9e9a64b0aa5d5763004839ac3b70de335f5a0",
+  "snapshotRedactions": [
+    "The initial public snapshot replaces a credential-like upload key example. Deliberate refreshes remove all examples before saving; examples do not participate in generated validation."
+  ],
+  "operationCount": 169,
+  "corrections": [
+    "Auth defaults to Token per the pinned security scheme. The quick-start prose says Bearer; private auth_scheme=Bearer is supported explicitly, with no automatic fallback or write resubmission. Both remain live-account unverified.",
+    "All API routes come from the current v2 schema; old guessed nested space/post/comment routes and v1 likes are not carried forward.",
+    "Nested objects retain upstream additional-properties behavior, including Tiptap extension node fields. Unknown top-level body flags are refused.",
+    "Positive integer path IDs and local page/per_page bounds are applied. No invented cursor support. Each all_pages request counts against community quota.",
+    "Upstream date_time formats are normalized to JSON Schema date-time for validation.",
+    "Create basic/image posts defaults to draft; users must explicitly confirm any publishing or scheduling."
+  ]
+}

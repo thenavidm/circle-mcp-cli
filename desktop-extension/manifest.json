@@ -1,0 +1,93 @@
+{
+  "manifest_version": "0.2",
+  "name": "circle",
+  "display_name": "Circle",
+  "version": "2.0.0",
+  "description": "Circle Admin API v2 MCP server with 170 tools for community members, spaces, posts, events, courses, messages and workflows.",
+  "long_description": "Requires eligible Circle Admin API access. All 104 writes require confirmation; read-only exposes 66 reads. Create posts defaults to draft. Every API request and page counts against community usage. Private tokens are never bundled.",
+  "author": {
+    "name": "Navid Moazzez",
+    "url": "https://navid.me"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thenavidm/circle-mcp-cli"
+  },
+  "homepage": "https://github.com/thenavidm/circle-mcp-cli",
+  "documentation": "https://github.com/thenavidm/circle-mcp-cli/blob/main/INSTALL.md",
+  "support": "https://github.com/thenavidm/circle-mcp-cli/issues",
+  "license": "AGPL-3.0-or-later",
+  "keywords": [
+    "circle",
+    "community",
+    "members",
+    "courses",
+    "events",
+    "mcp",
+    "cli",
+    "claude-desktop"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/server/index.js"
+      ],
+      "env": {
+        "CIRCLE_API_TOKEN": "${user_config.api_token}",
+        "CIRCLE_TOKEN_FILE": "${user_config.token_file}",
+        "CIRCLE_AUTH_SCHEME": "${user_config.auth_scheme}",
+        "CIRCLE_READ_ONLY": "${user_config.read_only}",
+        "CIRCLE_ALLOW_DESTRUCTIVE": "${user_config.allow_destructive}"
+      }
+    }
+  },
+  "user_config": {
+    "api_token": {
+      "type": "string",
+      "title": "Circle Admin V2 API token",
+      "description": "Private token from Settings > Developers > Tokens. Leave empty when using a private token file.",
+      "required": false,
+      "sensitive": true
+    },
+    "token_file": {
+      "type": "string",
+      "title": "Private token-only file",
+      "description": "Optional absolute regular local token-only file, at most 64 KB. Never bundle it.",
+      "required": false
+    },
+    "auth_scheme": {
+      "type": "string",
+      "title": "Authentication header scheme",
+      "description": "Token follows the pinned OpenAPI security scheme. Bearer follows the quick-start prose. No automatic fallback.",
+      "default": "Token",
+      "required": false
+    },
+    "read_only": {
+      "type": "boolean",
+      "title": "Read only",
+      "description": "Hide/refuse all 104 writes, leaving 66 reads.",
+      "default": false,
+      "required": false
+    },
+    "allow_destructive": {
+      "type": "boolean",
+      "title": "Allow confirmed writes",
+      "description": "If disabled, refuse all 104 writes even when confirmed.",
+      "default": true,
+      "required": false
+    }
+  },
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=22"
+    }
+  }
+}
