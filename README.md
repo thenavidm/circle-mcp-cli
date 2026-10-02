@@ -3314,7 +3314,7 @@ Open a sanitized [issue](https://github.com/thenavidm/circle-mcp-cli/issues) wit
 
 ## About the author
 
-Navid Moazzez is a leading AI business strategist, and the host of the AI Creator Summit, watched by 100,000+ creators. He helps creators and founders master AI and build their own AI Operating System (AI OS) to automate their business and life. This Beehiiv MCP server and CLI is one piece of that system.
+Navid Moazzez is a leading AI business strategist, and the host of the AI Creator Summit, watched by 100,000+ creators. He helps creators and founders master AI and build their own AI Operating System (AI OS) to automate their business and life. This Circle MCP server and CLI is one piece of that system.
 
 **Links**
 
