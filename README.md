@@ -15,7 +15,7 @@ One package gives you two ways in: circle-mcp connects the tools to your AI app,
 
 Built and maintained by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=circle-mcp-cli&utm_content=readme). Complete installation and private account setup are in [INSTALL.md](INSTALL.md).
 
-<img src="https://cdn.navid.me/repos/circle-mcp-cli.gif?v=2.0.0" alt="Illustrated Circle workflow in the same house terminal used on navid.me" width="520">
+<img src="https://cdn.navid.me/repos/circle-mcp-cli-retina.gif" alt="Illustrated Circle workflow in the same house terminal used on navid.me" width="520">
 
 The terminal illustrates shipped tools and the draft workflow. It is a presentation preview, not a verified live account operation.
 

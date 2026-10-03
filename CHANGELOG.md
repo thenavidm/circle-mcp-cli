@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+Use the native terminal capture at 1040 source pixels with lossless GIF optimization, displayed at 520 pixels, matching the Bluesky/Substack reference. Original assets remain available.
+
 ## 2.0.0 - 2026-10-02
 
 - Pin current Circle Admin API v2 schema: 169 API operations plus list_accounts; 170 tools, 66 reads, 104 writes.
