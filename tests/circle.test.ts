@@ -483,7 +483,8 @@ describe("Actual shared MCP and CLI protocol", () => {
     expect(
       run(["create-post", "--name", "X", "--confirm", "--agent"]).status,
     ).toBe(2);
-  });
+    // Five real launches: about a second each on a Windows runner, past the 5 s default.
+  }, 30_000);
 });
 
 // A required request body is independent of whether the upstream object marks fields required.
