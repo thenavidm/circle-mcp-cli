@@ -12,5 +12,5 @@ Follow the [Bluesky](https://github.com/thenavidm/bluesky-mcp-cli) and [Firefly]
 - [ ] Tag release workflow succeeds. Public npm installation and downloaded desktop bundle report the release version and expected tool counts.
 - [ ] Rendered GitHub README checked: logo, badges, terminal, contents links, contiguous argument tables and expanding FAQ answers.
 - [ ] Matching full navid.me CMS guide published and read back with valid taxonomy, release links and structured accordion FAQs; page/scene verified under the site's deployment rules.
-- [ ] Real token/task evidence records versions, date and usage; pending measurements stay pending without invented claims.
+- [ ] Claude Code (every tool loaded, tool search, SKILL.md) and Codex (one task over MCP and the CLI, five runs each) are measured against the last npm release, with versions, date and usage, and published in README section 7. No invented claims.
 - [ ] Record actual live-account and desktop GUI validation separately. Update release proof and programme status before moving on.

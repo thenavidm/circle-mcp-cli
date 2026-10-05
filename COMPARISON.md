@@ -13,17 +13,9 @@ No dedicated Circle-published task CLI was identified in the official developer/
 
 Current primary references: [Admin API](https://api.circle.so/apis/admin-api), [quick start](https://api.circle.so/apis/admin-api/quick-start), [limits](https://api.circle.so/apis/admin-api/usage-and-limits), [official OpenAPI](https://api-headless.circle.so/api/admin/v2/swagger.yaml), [official MCP](https://api.circle.so/mcp). See COMPARISON.md for review scope and pending evidence.
 
-MCP and CLI use the same SDK server, schemas, validation and HTTP handlers. The CLI talks to that server through the SDK's in-memory transport; there is no second API implementation.
+MCP and CLI are built by [Slipway](https://github.com/thenavidm/slipway) from each tool's one definition, so they share schemas, validation and HTTP handlers; there is no second API implementation.
 
-| Measurement | What to include |
-| --- | --- |
-| Eager MCP loading | All tool schemas and instructions |
-| Default/deferred tool search | Actual selected schemas and discovery overhead |
-| Skill read once | Full SKILL.md and command discovery |
-| Recurring skill discovery | The installed skill's listing text |
-| Matched successful task | Help/schema, reasoning, calls/commands, results, errors and retries |
-
-Fresh usage measurements are pending. Do not estimate tokens from characters, substitute another repo's results or declare zero CLI cost. Record model/client/package versions and date, loading settings, input/output usage, latency and equivalent outcomes. Compare a small member/space query and repeated focused administration across supported official/local surfaces, using the same authorized data and result fields. API quota and service costs remain separate. No measured superiority is claimed.
+README section 7 has this package's own costs, measured in Claude Code and Codex against 2.0.1 on 2026-10-05. Do not estimate tokens from characters or substitute another repo's results; no other offering was measured, and API quota and service costs remain separate.
 
 
 

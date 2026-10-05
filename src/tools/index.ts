@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 import type { Json, CircleClient, QueryParam } from "../api/client.js";
 import { UsageError } from "../api/errors.js";
 import type { Config } from "../config.js";
-import type { Risk } from "../safety.js";
+import type { Risk } from "@thenavidm/slipway";
 export type Operation = {
   name: string;
   title: string;
@@ -93,9 +93,13 @@ function fieldsFor(op: Operation): Json {
     additionalProperties: false,
   };
 }
-const bodyValidators = new Map(
-  operations.map((op) => [op.name, ajv.compile(op.bodySchema)]),
-);
+// Each schema compiles on first use: compiling all of them at load held back the server's first answer. compileAll() runs them in tests.
+const bodyValidators = new Map<string, ValidateFunction>();
+function bodyValidator(op: Operation): ValidateFunction {
+  let v = bodyValidators.get(op.name);
+  if (!v) bodyValidators.set(op.name, (v = ajv.compile(op.bodySchema)));
+  return v;
+}
 async function execute(
   op: Operation,
   args: Json,
@@ -131,7 +135,7 @@ async function execute(
     }
   if (["create_post", "create_image_post"].includes(op.name))
     body = { status: "draft", ...body };
-  check(bodyValidators.get(op.name)!, body);
+  check(bodyValidator(op), body);
   if (
     ["PUT", "PATCH"].includes(op.method) &&
     Object.keys(op.bodySchema.properties ?? {}).length &&
@@ -266,11 +270,20 @@ ALL_TOOLS.push({
     })),
   }),
 });
-const validators = new Map(
-  ALL_TOOLS.map((t) => [t.name, ajv.compile(t.inputSchema)]),
-);
+const validators = new Map<string, ValidateFunction>();
+function validatorFor(tool: ToolSpec): ValidateFunction {
+  let v = validators.get(tool.name);
+  if (!v) validators.set(tool.name, (v = ajv.compile(tool.inputSchema)));
+  return v;
+}
 export function validateArguments(tool: ToolSpec, args: Json): void {
-  check(validators.get(tool.name)!, args);
+  check(validatorFor(tool), args);
+}
+/** Compile every input and body schema, as loading once did, so a test can prove they all compile. */
+export function compileAll(): number {
+  for (const t of ALL_TOOLS) validatorFor(t);
+  for (const op of operations) bodyValidator(op);
+  return validators.size + bodyValidators.size;
 }
 export function visibleTools(config: Config): ToolSpec[] {
   return ALL_TOOLS.filter((t) => !config.readOnly || t.risk === "read");

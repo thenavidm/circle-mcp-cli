@@ -6,12 +6,12 @@ import { loadConfig } from "../src/config.js";
 import { CircleClient } from "../src/api/client.js";
 import {
   ALL_TOOLS,
+  compileAll,
   validateArguments,
   visibleTools,
 } from "../src/tools/index.js";
-import { buildServer } from "../src/server.js";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { createApp } from "../src/app.js";
+import { connect as connectApp } from "@thenavidm/slipway/testing";
 import { spawnSync } from "node:child_process";
 const config = () =>
   loadConfig({
@@ -37,22 +37,34 @@ const invoke = async (
   validateArguments(t, args);
   return await t.handler(args, new CircleClient(config(), fetcher));
 };
+// The real Slipway server with an injected client. The write policy comes from the environment, as it does in
+// use, and a call to a hidden tool is a protocol error rather than a tool result; both are refusals a client sees.
 async function connect(c = config(), fetcher: typeof fetch = vi.fn() as any) {
-  const s = buildServer(c, new CircleClient(c, fetcher));
-  const [a, b] = InMemoryTransport.createLinkedPair();
-  await s.connect(b);
-  const client = new Client({ name: "fixture", version: "1" });
-  await client.connect(a);
-  return {
-    client,
-    close: async () => {
-      await client.close();
-      await s.close();
+  const mcp = await connectApp(createApp({ context: () => ({ config: c, client: new CircleClient(c, fetcher) }) }), {
+    env: { CIRCLE_API_TOKEN: "fixture-value", ...(c.readOnly ? { CIRCLE_READ_ONLY: "1" } : {}), ...(c.allowDestructive ? {} : { CIRCLE_ALLOW_DESTRUCTIVE: "0" }) },
+  });
+  const client = {
+    listTools: async () => ({ tools: await mcp.listTools() }),
+    callTool: async ({ name, arguments: args }: { name: string; arguments: Record<string, unknown> }): Promise<any> => {
+      try {
+        return await mcp.callTool(name, args);
+      } catch (error) {
+        return { isError: true, content: [{ type: "text", text: JSON.stringify({ error: (error as Error).message }) }] };
+      }
     },
   };
+  return { client, close: () => mcp.close() };
 }
-const readError = (x: any) => JSON.parse(x.content[0].text).error;
+// Slipway's errors are JSON; an argument the MCP SDK rejects first comes back as its own plain text.
+const readError = (x: any) => {
+  try {
+    return JSON.parse(x.content[0].text).error;
+  } catch {
+    return x.content[0].text;
+  }
+};
 describe("Shared Circle routes and private transport", () => {
+  it("compiles every input and body schema with the native validator", () => expect(compileAll()).toBeGreaterThan(ALL_TOOLS.length));
   it("uses current v2 member/post routes and Token auth", async () => {
     const f = vi.fn(async (url: any, init: any) => {
       expect(String(url)).toBe("https://app.circle.so/api/admin/v2/posts/19");
@@ -406,7 +418,7 @@ describe("Actual shared MCP and CLI protocol", () => {
         arguments: { space_id: 7, name: "X", confirm: true },
       });
       expect(r.isError).toBe(true);
-      expect(readError(r)).toContain("READ_ONLY");
+      expect(readError(r)).toMatch(/READ_ONLY|not found/);
       expect(f).not.toHaveBeenCalled();
     } finally {
       await c.close();

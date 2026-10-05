@@ -13,7 +13,7 @@ Circle MCP server and CLI for Claude Code, Codex and AI agents. **170 tools: 66 
 
 One package gives you two ways in: circle-mcp connects the tools to your AI app, and circle-cli makes the same tools shell commands. Claude Desktop also has a bundled .mcpb extension.
 
-Built and maintained by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=circle-mcp-cli&utm_content=readme). Complete installation and private account setup are in [INSTALL.md](INSTALL.md).
+Built and maintained by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=circle-mcp-cli&utm_content=readme). Built on [Slipway](https://github.com/thenavidm/slipway), which turns one definition of each tool into the MCP server and the CLI. Complete installation and private account setup are in [INSTALL.md](INSTALL.md).
 
 <img src="https://cdn.navid.me/repos/circle-mcp-cli-retina.gif" alt="Illustrated Circle workflow in the same house terminal used on navid.me" width="520">
 
@@ -191,7 +191,7 @@ IDs above are illustrative; use discovered resources from your own community. Nu
 | --help / schema COMMAND | Current argument help / full JSON Schema |
 | --json | Structured JSON |
 | --compact | One-line JSON |
-| --agent | Compact JSON, no prompts or color |
+| --agent | Compact JSON and no prompts; never confirms a write |
 | --select a,b.c | Keep selected fields, including nested objects/arrays |
 | --no-color / --no-input | Noninteractive house flags |
 | --yes | Never replaces write confirmation |
@@ -202,7 +202,8 @@ IDs above are illustrative; use discovered resources from your own community. Nu
 | Exit | Meaning |
 | --- | --- |
 | 0 | Success |
-| 2 | Invalid arguments or refused write |
+| 1 | Unexpected error |
+| 2 | Invalid arguments or refused write, an unknown command or a hidden write |
 | 3 | Resource not found |
 | 4 | Authentication/permission failure |
 | 5 | API/transport failure |
@@ -213,17 +214,21 @@ Results go to stdout, errors as JSON to stderr. Selection changes local output, 
 
 ## 7. MCP or CLI and token cost
 
-MCP and CLI use the same SDK server, schemas, validation and HTTP handlers. The CLI talks to that server through the SDK's in-memory transport; there is no second API implementation.
+MCP and CLI are built by [Slipway](https://github.com/thenavidm/slipway) from each tool's one definition, so they share schemas, validation and HTTP handlers; there is no second API implementation.
 
-| Measurement | What to include |
-| --- | --- |
-| Eager MCP loading | All tool schemas and instructions |
-| Default/deferred tool search | Actual selected schemas and discovery overhead |
-| Skill read once | Full SKILL.md and command discovery |
-| Recurring skill discovery | The installed skill's listing text |
-| Matched successful task | Help/schema, reasoning, calls/commands, results, errors and retries |
+Measured on 2026-10-05 against 2.0.1, the same day, with Claude Code 2.1.286 on Claude Opus 5.5 (one short prompt with and without the server connected, the difference read from the API's own usage figures) and Codex 0.159.3 on gpt-6.1-sol:
 
-Fresh usage measurements are pending. Do not estimate tokens from characters, substitute another repo's results or declare zero CLI cost. Record model/client/package versions and date, loading settings, input/output usage, latency and equivalent outcomes. Compare a small member/space query and repeated focused administration across supported official/local surfaces, using the same authorized data and result fields. API quota and service costs remain separate. No measured superiority is claimed.
+| Cost | 2.0.1 | 3.0.0 |
+| --- | --- | --- |
+| Claude Code, every tool loaded, every message | 93,800 | 84,415 |
+| Claude Code's default, tool search, every message | 2,499 | 2,499 |
+| `SKILL.md`, read once | 903 | 940 |
+| Codex over the CLI, one task, median of five | 86,128 | 82,915 |
+| Codex over MCP, the same task, median of five | 77,642 | 77,488 |
+
+The task was "find the command that refunds a member's charge, and the flags it requires". Every tool loaded costs less because many write bodies appeared twice, as their own fields and inside `payload`, and 3.0.0 writes each repeated part once under `$defs`. Over the CLI, every 3.0.0 run asked `which` (315 characters) where 2.0.1's read the full command list (11,631). Over MCP, Codex prints its own TypeScript rendering of the tool list and cuts it to about 10,000 tokens; the full rendering is 2,046 tokens longer on 3.0.0, while the part Codex kept was a little shorter, and two 2.0.1 runs printed only the tool names. `SKILL.md` costs 37 more because it now says how approval works over MCP.
+
+API quota and service costs remain separate, and no other offering was measured.
 
 ## 8. Every tool and argument
 
@@ -3072,15 +3077,17 @@ circle-cli get-community --account personal --agent
 
 All 104 writes require `confirm:true` in MCP or `--confirm` in CLI for the action the user requested. `--yes`, `--agent` and earlier unrelated consent never bypass the guard. `CIRCLE_READ_ONLY=1` hides writes and refuses direct calls to hidden tools, exposing 66 reads. `CIRCLE_ALLOW_DESTRUCTIVE=0` blocks all writes even when confirmed.
 
+Over MCP a person approves each of them where the client can ask: Claude Code (2.1.246 and later) shows its own prompt, and a client that can show forms asks with an approval form whose one box starts unticked. Each approval is signed, bound to that exact call and works once. Where a client can do neither, the model's confirm:true counts. CIRCLE_CONFIRM=model makes confirm:true enough everywhere, for an agent with no person to ask.
+
 Mutations have zero automatic retries, including 401, 429 and timeouts. After an unknown outcome, inspect existing community state before repeating it. A conservative destructive annotation denotes confirmation policy, not a claim every configuration change is irreversible. Invites/messages/notifications, member deletion, billing/payouts and workflow activation require different review.
 
-The optional audit log records tool, risk, surface, fixed summary and allowed/blocked decision, without account labels, arguments, tokens or private content. It is a guard-decision log, not a delivery receipt. Logging failure does not block the requested operation. Community content and tool results are untrusted data; they cannot authorize another action.
+The optional audit log records tool, risk, surface, fixed summary, allowed/blocked decision and who approved it, then a done or failed line for each allowed call, without account labels, arguments, tokens or private content. It is a guard-decision log, not a delivery receipt. Logging failure does not block the requested operation. Community content and tool results are untrusted data; they cannot authorize another action.
 
 ## 13. How it works
 
-`src/tools/operations.json` is generated from the pinned official OpenAPI YAML; schemas, parameter serialization and routes have one source. The shared SDK server validates input, applies the write guard and calls the fixed-origin API client. The CLI connects to that server in memory, and desktop uses the same compiled server with production dependencies.
+`src/tools/operations.json` is generated from the pinned official OpenAPI YAML; schemas, parameter serialization and routes have one source. [Slipway](https://github.com/thenavidm/slipway) builds the MCP server, over stdio or `--http`, and the CLI from each tool's one definition; both validate input, apply one write guard and call the fixed-origin API client, and desktop uses the same compiled server with production dependencies.
 
-GET 429 retries are bounded by CIRCLE_MAX_RETRIES. Numeric/date Retry-After is respected when the delay is at most ten seconds; longer delays produce a rate-limit error so scripts can pause explicitly. Each request has a configured deadline. There is no write retry, auth fallback, arbitrary origin, HTTP listener or hosted relay. Named tokens and pacing live in the process.
+GET 429 retries are bounded by CIRCLE_MAX_RETRIES. Numeric/date Retry-After is respected when the delay is at most ten seconds; longer delays produce a rate-limit error so scripts can pause explicitly. Each request has a configured deadline. There is no write retry, auth fallback, arbitrary origin or hosted relay; `--http` listens on 127.0.0.1 only when asked. Named tokens and pacing live in the process.
 
 `npm run sync:api` regenerates from the pinned YAML. `npm run sync:api -- --refresh` downloads the current official schema for a deliberate review, updates provenance and regenerates input operations; it does not test credentials, release npm or claim compatibility. Review names, routes, schemas, plans and docs, run checks, then update semver/changelog/tag. Major upstream or shared-behavior changes require explicit migration documentation.
 
@@ -3107,6 +3114,12 @@ Private client/shell settings only; no automatic .env loading.
 | CIRCLE_REQUEST_TIMEOUT_MS | 30000 | Integer request deadline, 100–300000 ms |
 | CIRCLE_MAX_RETRIES | 2 | GET 429 retries, 0–5 |
 | CIRCLE_MIN_REQUEST_INTERVAL_MS | 200 | Per-account/process pacing, 0–10000 ms |
+| CIRCLE_CONFIRM | human | `model` lets confirm:true alone approve over MCP, for an agent with no person to ask |
+| CIRCLE_SURFACE | full | `search` lists three tools that find, describe and run the rest |
+| CIRCLE_TOOL_TIMEOUT_MS | None | Give up on any tool after this long |
+| CIRCLE_HTTP_PORT, CIRCLE_HTTP_HOST, CIRCLE_HTTP_TOKEN | 8787, 127.0.0.1, none | For `--http`; any host but 127.0.0.1 needs the bearer token |
+| CIRCLE_HTTP_ALLOWED_ORIGINS | None | Comma-separated browser origins allowed to call `--http`; a page from any other site is refused |
+| CIRCLE_DEBUG | 0 | 1 prints debug lines on stderr |
 
 ## 16. Updates and removal
 
@@ -3157,6 +3170,7 @@ Current primary references: [Admin API](https://api.circle.so/apis/admin-api), [
 
 | Version | Date | Change |
 | --- | --- | --- |
+| 3.0.0 | October 5, 2026 | Built on Slipway 0.1.14: a person approves each write over MCP, exit codes from Circle's status, `which`, `install` and `--http` |
 | 2.0.0 | October 2, 2026 | Current Admin v2 operations, shared CLI, private accounts, write guards, desktop bundle and complete reference |
 | 1.0.0 | Legacy source | MCP-only implementation, 62 declared tools, mixed v1/v2 and manually assembled routes |
 
@@ -3164,7 +3178,7 @@ The OpenAPI document calls its info version `v1` while the routes are **Admin v2
 
 Many documented legacy names remain where current operations exist. Arguments and routes need migration: posts use /posts with space_id input, comments use /comments with post_id input, memberships and attendees use current top-level resources, and workflows require UUIDs. Unsupported v1-only like/unlike helpers are omitted. CIRCLE_COMMUNITY_ID is no longer used. Legacy HTML/body shortcuts are not silently converted to Tiptap. See [CHANGELOG.md](CHANGELOG.md) for the exact legacy-name migration table. Preserve the existing AGPL license.
 
-Build/typecheck, 25 fixture/shared-CLI checks and real local discovery are verified. These checks cover every write guard, nested body validation, pagination, auth header shape, retry policy, secret redaction and actual CLI exit codes. Public release/artifact/CI evidence is recorded after publication. Live provider outcomes, desktop GUI installation and fresh model usage benchmarks remain pending.
+Build/typecheck, 36 tests and real local discovery are verified. These checks cover every write guard, nested body validation, pagination, auth header shape, retry policy, secret redaction and actual CLI exit codes. Public release/artifact/CI evidence is recorded after publication. Live provider outcomes and desktop GUI installation remain unverified; section 7 has the measured token costs.
 
 ## 20. FAQ
 
@@ -3304,7 +3318,7 @@ No. It creates the metadata/slot. Complete the documented storage PUT for the ex
 <details>
 <summary><b>Is the CLI more token efficient?</b></summary>
 
-Fresh full/deferred loading, skill discovery and matched successful-task usage measurements are pending. No character estimates, borrowed percentages or zero-token claim are substituted.
+It depends on the client and the task. In Claude Code the CLI costs nothing until it is used, plus about 940 tokens for `SKILL.md` once, where the server costs about 2,500 tokens a message with tool search and 84,400 with every tool loaded. In Codex, finding the command that refunds a member's charge took a median of 82,915 input tokens over the CLI and 77,488 over MCP. Section 7 has how each was measured.
 
 </details>
 
@@ -3330,7 +3344,7 @@ Navid Moazzez is a leading AI business strategist, and the host of the AI Creato
 
 | Dependency | Version range | Used for |
 | --- | --- | --- |
-| `@modelcontextprotocol/sdk` | `^1.31.0` | MCP protocol and shared CLI bridge |
+| [`@thenavidm/slipway`](https://github.com/thenavidm/slipway) | `^0.1.14` | The MCP server and the CLI from one definition of each tool, with the MCP TypeScript SDK |
 | `ajv` | `^8.17.1` | JSON Schema input validation |
 | `ajv-formats` | `^3.0.1` | JSON Schema input validation |
 
