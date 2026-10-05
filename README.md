@@ -3170,6 +3170,7 @@ Current primary references: [Admin API](https://api.circle.so/apis/admin-api), [
 
 | Version | Date | Change |
 | --- | --- | --- |
+| 3.0.1 | October 5, 2026 | A refusal and the approval form say what a call can do again, as 2.0 did |
 | 3.0.0 | October 5, 2026 | Built on Slipway 0.1.14: a person approves each write over MCP, exit codes from Circle's status, `which`, `install` and `--http` |
 | 2.0.0 | October 2, 2026 | Current Admin v2 operations, shared CLI, private accounts, write guards, desktop bundle and complete reference |
 | 1.0.0 | Legacy source | MCP-only implementation, 62 declared tools, mixed v1/v2 and manually assembled routes |
@@ -3344,7 +3345,7 @@ Navid Moazzez is a leading AI business strategist, and the host of the AI Creato
 
 | Dependency | Version range | Used for |
 | --- | --- | --- |
-| [`@thenavidm/slipway`](https://github.com/thenavidm/slipway) | `^0.1.14` | The MCP server and the CLI from one definition of each tool, with the MCP TypeScript SDK |
+| [`@thenavidm/slipway`](https://github.com/thenavidm/slipway) | `^0.1.17` | The MCP server and the CLI from one definition of each tool, with the MCP TypeScript SDK |
 | `ajv` | `^8.17.1` | JSON Schema input validation |
 | `ajv-formats` | `^3.0.1` | JSON Schema input validation |
 

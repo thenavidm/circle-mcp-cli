@@ -2,7 +2,7 @@
   "manifest_version": "0.2",
   "name": "circle",
   "display_name": "Circle",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Circle Admin API v2 MCP server with 170 tools for community members, spaces, posts, events, courses, messages and workflows.",
   "long_description": "Requires eligible Circle Admin API access. All 104 writes require confirmation; read-only exposes 66 reads. Create posts defaults to draft. Every API request and page counts against community usage. Private tokens are never bundled.",
   "author": {
